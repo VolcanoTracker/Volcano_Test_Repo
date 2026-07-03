@@ -1,3 +1,7 @@
+alert("Script is running!");
+const map = L.map('map').setView([37, -95], 4);
+// ... the rest of your code ...
+
 // Initialize map
 const map = L.map('map').setView([37, -95], 4);
 
