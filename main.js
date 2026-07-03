@@ -1,6 +1,5 @@
-alert("Script is running!");
-
 const map = L.map('map').setView([37, -95], 4);
+
 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
     attribution: '© OpenStreetMap'
 }).addTo(map);
@@ -8,14 +7,14 @@ L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
 fetch('https://corsproxy.io/?url=https://volcanoes.usgs.gov/vsc/api/volcanoApi/volcanoesUS')
     .then(r => r.json())
     .then(data => {
+        console.log("Successfully loaded", data.length, "volcanoes.");
+
         data.forEach(v => {
             if (v.latitude && v.longitude) {
-                // DEBUG: Print the raw value to your console
-                console.log("Volcano:", v.vName, "| Raw colorCode:", v.colorCode);
-
-                let color = 'blue';
-                // Be more flexible with the check
-                const status = (v.colorCode || '').toString().toUpperCase();
+                // Determine color based on colorCode
+                let color = 'blue'; 
+                // We use || '' to make sure we don't crash if colorCode is null
+                const status = (v.colorCode || '').toUpperCase();
                 
                 if (status.includes('RED')) color = 'red';
                 else if (status.includes('ORANGE')) color = 'orange';
@@ -33,7 +32,7 @@ fetch('https://corsproxy.io/?url=https://volcanoes.usgs.gov/vsc/api/volcanoApi/v
 
                 L.marker([v.latitude, v.longitude], { icon: customIcon })
                  .addTo(map)
-                 .bindPopup(`<b>${v.vName}</b><br>Status: ${v.colorCode}`);
+                 .bindPopup(`<b>${v.vName}</b><br>Status: ${v.colorCode || 'Unknown'}`);
             }
         });
     })
