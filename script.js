@@ -10,22 +10,31 @@ L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
 // These are hosted by a CDN for convenience.
 const iconBaseUrl = 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/';
 const getMarkerIcon = (colorCode) => {
-    let iconUrl = iconBaseUrl + 'marker-icon-2x-blue.png'; // Default
+    // Log the color code we receive from the API
+    console.log("Processing color:", colorCode);
 
-    if (!colorCode) return new L.Icon.Default();
-
-    const codeUpper = colorCode.toUpperCase();
+    const iconBaseUrl = 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/';
     
-    if (codeUpper.includes('RED')) {
-        iconUrl = iconBaseUrl + 'marker-icon-2x-red.png';
-    } else if (codeUpper.includes('ORANGE')) {
-        iconUrl = iconBaseUrl + 'marker-icon-2x-orange.png';
-    } else if (codeUpper.includes('YELLOW')) {
-        iconUrl = iconBaseUrl + 'marker-icon-2x-yellow.png';
-    } else if (codeUpper.includes('GREEN')) {
-        iconUrl = iconBaseUrl + 'marker-icon-2x-green.png';
+    // Default to Blue
+    let colorName = 'blue';
+
+    if (colorCode) {
+        const code = colorCode.toUpperCase();
+        if (code.includes('RED')) colorName = 'red';
+        else if (code.includes('ORANGE')) colorName = 'orange';
+        else if (code.includes('YELLOW')) colorName = 'yellow';
+        else if (code.includes('GREEN')) colorName = 'green';
     }
 
+    return new L.Icon({
+        iconUrl: iconBaseUrl + `marker-icon-2x-${colorName}.png`,
+        shadowUrl: iconBaseUrl + 'marker-shadow.png',
+        iconSize: [25, 41],
+        iconAnchor: [12, 41],
+        popupAnchor: [1, -34],
+        shadowSize: [41, 41]
+    });
+};
     return new L.Icon({
         iconUrl: iconUrl,
         shadowUrl: iconBaseUrl + 'marker-shadow.png', // Keep the shadow consistent
