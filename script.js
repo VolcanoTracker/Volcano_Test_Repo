@@ -1,19 +1,20 @@
-// Keep it simple to force the map to render
+// 1. Initialize the map
 const map = L.map('map').setView([37, -95], 4);
-
 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
     attribution: '© OpenStreetMap'
 }).addTo(map);
 
-// Basic fetch to confirm data
+// 2. Fetch the data
 fetch('https://corsproxy.io/?url=https://volcanoes.usgs.gov/vsc/api/volcanoApi/volcanoesUS')
-    .then(r => r.json())
+    .then(response => response.json())
     .then(data => {
-        console.log("Data count:", data.length);
+        // 3. Add markers
         data.forEach(v => {
             if (v.latitude && v.longitude) {
-                L.marker([v.latitude, v.longitude]).addTo(map).bindPopup(v.vName);
+                L.marker([v.latitude, v.longitude])
+                 .addTo(map)
+                 .bindPopup(`<b>${v.vName}</b><br>Status: ${v.colorCode || 'Unknown'}`);
             }
         });
     })
-    .catch(err => console.log("Error:", err));
+    .catch(error => console.error('Fetch error:', error));
