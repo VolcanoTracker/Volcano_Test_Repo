@@ -18,6 +18,6 @@ fetch('https://corsproxy.io/?url=https://volcanoes.usgs.gov/vsc/api/volcanoApi/v
                  .addTo(map)
                  .bindPopup(`<b>${name}</b><br>Status: ${alert || 'None Provided'}`);
             }
-   
+   //please
     .catch(err => console.error("Fetch Error:", err));
    
