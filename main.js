@@ -9,14 +9,12 @@ fetch('https://corsproxy.io/?url=https://volcanoes.usgs.gov/vsc/api/volcanoApi/v
     .then(data => {
         data.forEach(v => {
             if (v.latitude && v.longitude) {
-                // Map the NVEWS number to a color
-                // 1-2: Low (Green), 3: Moderate (Yellow), 4: High (Orange), 5: Very High (Red)
+                // Determine color based on NVEWS level
                 const level = parseInt(v.NVEWS) || 1;
                 let color = 'green';
                 if (level >= 5) color = 'red';
                 else if (level === 4) color = 'orange';
                 else if (level === 3) color = 'yellow';
-                else color = 'green';
 
                 const customIcon = new L.Icon({
                     iconUrl: `https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-${color}.png`,
@@ -33,6 +31,4 @@ fetch('https://corsproxy.io/?url=https://volcanoes.usgs.gov/vsc/api/volcanoApi/v
             }
         });
     })
-    .catch(err => console.error("Fetch Error:", err));
-
     .catch(err => console.error("Fetch Error:", err));
