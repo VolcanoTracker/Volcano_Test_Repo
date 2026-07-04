@@ -33,4 +33,5 @@ fetch('https://corsproxy.io/?url=https://volcanoes.usgs.gov/vsc/api/volcanoApi/v
             }
         });
     })
+    //please
     .catch(err => console.error("Fetch Error:", err));
