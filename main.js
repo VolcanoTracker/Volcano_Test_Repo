@@ -7,17 +7,16 @@ L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
 fetch('https://corsproxy.io/?url=https://volcanoes.usgs.gov/vsc/api/volcanoApi/volcanoesUS')
     .then(r => r.json())
     .then(data => {
+        // Look at the first object to see what it contains
+        console.log("ALL KEYS IN OBJECT:", Object.keys(data[0]));
+        console.log("FULL EXAMPLE OBJECT:", data[0]);
+
         data.forEach(v => {
-    // This will print the actual list of keys for every single volcano object
-    console.log("Actual keys present:", Object.keys(v));
-    
-    // We stop the loop immediately so we only get one log
-    throw new Error("Debugging: Check console for keys!");
-});
-                L.marker([v.latitude, v.longitude], { icon: customIcon })
-                 .addTo(map)
-                 .bindPopup(`<b>${name}</b><br>Status: ${alert || 'None Provided'}`);
+            if (v.latitude && v.longitude) {
+                // We are keeping this simple just to get the map back up
+                L.marker([v.latitude, v.longitude]).addTo(map)
+                 .bindPopup("Check Console for Keys");
             }
-   //please
+        });
+    })
     .catch(err => console.error("Fetch Error:", err));
-   
