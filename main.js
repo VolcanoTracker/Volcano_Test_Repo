@@ -35,5 +35,4 @@ fetch('https://corsproxy.io/?url=https://volcanoes.usgs.gov/vsc/api/volcanoApi/v
     })
     .catch(err => console.error("Fetch Error:", err));
 
-    //please
     .catch(err => console.error("Fetch Error:", err));
