@@ -6,18 +6,12 @@ L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
 }).addTo(map);
 
 fetch('https://corsproxy.io/?url=https://volcanoes.usgs.gov/vsc/api/volcanoApi/volcanoesUS')
+    .then(r => r.json())
     .then(data => {
-    console.log("Successfully loaded", data.length, "volcanoes.");
-    
-    // Let's inspect the FIRST volcano in the list to find the right property
-    console.log("Sample Volcano Object:", data[0]);
+        // Let's see the WHOLE thing
+        console.log("Full API Response:", data);
+    })
+    .catch(err => console.error("Fetch Error:", err));
 
-    data.forEach(v => {
-        if (v.latitude && v.longitude) {
-            // ... (keep your map code as is for now)
-        }
-    });
-})
         
    
-    .catch(err => console.error("Fetch Error:", err));
