@@ -1,12 +1,25 @@
+const map = L.map('map').setView([37, -95], 4);
+
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution: '© OpenStreetMap'
+}).addTo(map);
+
 fetch('https://corsproxy.io/?url=https://volcanoes.usgs.gov/vsc/api/volcanoApi/volcanoesUS')
     .then(r => r.json())
     .then(data => {
+        // Double check that we have an array
+        if (!Array.isArray(data)) {
+            console.error("Data is not an array!");
+            return;
+        }
+
         data.forEach(v => {
+            // Safety check: Ensure lat/long exist and are valid numbers
             if (v.latitude && v.longitude) {
-                // Use the keys confirmed by your console inspection
-                const status = (v.alert_level || v.color_code || 'green').toUpperCase();
                 
-                let color = 'blue'; // Default
+                const status = (v.alert_level || v.color_code || 'GREEN').toUpperCase();
+                
+                let color = 'blue';
                 if (status.includes('RED')) color = 'red';
                 else if (status.includes('ORANGE')) color = 'orange';
                 else if (status.includes('YELLOW')) color = 'yellow';
@@ -21,13 +34,17 @@ fetch('https://corsproxy.io/?url=https://volcanoes.usgs.gov/vsc/api/volcanoApi/v
                     shadowSize: [41, 41]
                 });
 
-                L.marker([v.latitude, v.longitude], { icon: customIcon })
-                 .addTo(map)
-                 .bindPopup(`<b>${v.volcano_name}</b><br>Status: ${status}`);
+                // Add to map safely
+                try {
+                    L.marker([v.latitude, v.longitude], { icon: customIcon })
+                     .addTo(map)
+                     .bindPopup(`<b>${v.volcano_name || 'Unknown'}</b><br>Status: ${status}`);
+                } catch (e) {
+                    console.error("Failed to add marker for:", v.volcano_name, e);
+                }
             }
         });
     })
     .catch(err => console.error("Fetch Error:", err));
-
         
    
