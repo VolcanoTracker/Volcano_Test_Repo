@@ -1,16 +1,17 @@
-const map = L.map('map').setView([37, -95], 4);
+const map = L.map('map').setView([20, 0], 2); // Centered globally
 
 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
     attribution: '© OpenStreetMap'
 }).addTo(map);
 
-fetch('https://corsproxy.io/?url=https://volcanoes.usgs.gov/vsc/api/volcanoApi/volcanoesUS')
+fetch('https://corsproxy.io/?url=https://volcanoes.usgs.gov/vsc/api/volcanoApi/volcanoesGVP')
     .then(r => r.json())
     .then(data => {
         data.forEach(v => {
             if (v.latitude && v.longitude) {
-                // Determine color based on NVEWS level
+                // If NVEWS is missing (as it often is globally), default to 1
                 const level = parseInt(v.NVEWS) || 1;
+                
                 let color = 'green';
                 if (level >= 5) color = 'red';
                 else if (level === 4) color = 'orange';
@@ -27,7 +28,7 @@ fetch('https://corsproxy.io/?url=https://volcanoes.usgs.gov/vsc/api/volcanoApi/v
 
                 L.marker([v.latitude, v.longitude], { icon: customIcon })
                  .addTo(map)
-                 .bindPopup(`<b>${v.vName}</b><br>Hazard Level: ${level}`);
+                 .bindPopup(`<b>${v.vName}</b><br>Global ID: ${v.vnum}<br>Hazard Level: ${level}`);
             }
         });
     })
