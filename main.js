@@ -15,9 +15,10 @@ fetch('https://corsproxy.io/?url=https://volcanoes.usgs.gov/vsc/api/volcanoApi/v
             // ... (rest of your logic)
         });
     })
-    .catch(err => console.error("Fetch Error:", err));
-
-        // Update the marquee banner
+       // Update the marquee banner
         const banner = document.getElementById('ticker-content');
         banner.innerHTML = `Total Monitored Active: ${totalActive} | High Hazard Alert (Lvl 3-5): ${highHazards.join(', ')}`;
     .catch(err => console.error("Fetch Error:", err));
+
+     
+   
