@@ -4,37 +4,42 @@ document.addEventListener('DOMContentLoaded', () => {
         attribution: '© OpenStreetMap'
     }).addTo(map);
 
+    // Create a Layer Group for Smithsonian (Purple) and USGS (Hazard Colors)
+    const usgsLayer = L.layerGroup().addTo(map);
+    const smithsonianLayer = L.layerGroup().addTo(map);
+
     Promise.all([
         fetch('https://corsproxy.io/?url=https://volcanoes.usgs.gov/vsc/api/volcanoApi/volcanoesGVP').then(r => r.json()),
         fetch('https://corsproxy.io/?url=https://volcanoes.usgs.gov/vsc/api/volcanoApi/volcanoesUS').then(r => r.json())
     ])
     .then(([globalData, usData]) => {
-        // Create a lookup map using vnum (The stable ID used by both APIs)
-        const usHazards = {};
-        usData.forEach(v => {
-            if(v.vnum) usHazards[v.vnum] = parseInt(v.NVEWS) || 1;
-        });
+        // 1. Create a Set of all US volcano IDs so we know which ones to "Colorize"
+        const usVnums = new Set(usData.map(v => v.vnum));
 
         globalData.forEach(v => {
-            if (v.latitude && v.longitude) {
-                // Look up by vnum
-                const hazardLevel = usHazards[v.vnum] || 1;
+            if (!v.latitude || !v.longitude) return;
+
+            if (usVnums.has(v.vnum)) {
+                // IT IS A USGS VOLCANO: Use Hazard Color
+                const usEntry = usData.find(u => u.vnum === v.vnum);
+                const level = parseInt(usEntry.NVEWS) || 1;
                 
-                let color = 'blue'; // Default for global
-                if (hazardLevel >= 5) color = 'red';
-                else if (hazardLevel === 4) color = 'orange';
-                else if (hazardLevel === 3) color = 'yellow';
-                else if (hazardLevel === 2) color = 'green';
-
-                const icon = new L.Icon({
-                    iconUrl: `https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-${color}.png`,
-                    shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
-                    iconSize: [25, 41], iconAnchor: [12, 41], popupAnchor: [1, -34], shadowSize: [41, 41]
-                });
-
-                L.marker([v.latitude, v.longitude], { icon })
-                 .addTo(map)
-                 .bindPopup(`<b>${v.vName}</b><br>Hazard Level: ${hazardLevel}`);
+                let color = (level >= 5) ? 'red' : (level === 4) ? 'orange' : (level === 3) ? 'yellow' : 'green';
+                
+                L.marker([v.latitude, v.longitude], {
+                    icon: new L.Icon({
+                        iconUrl: `https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-${color}.png`,
+                        iconSize: [25, 41], iconAnchor: [12, 41]
+                    })
+                }).addTo(usgsLayer).bindPopup(`<b>${v.vName}</b><br>Hazard Level: ${level}`);
+            } else {
+                // IT IS A SMITHSONIAN VOLCANO: Use Purple
+                L.marker([v.latitude, v.longitude], {
+                    icon: new L.Icon({
+                        iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-violet.png',
+                        iconSize: [25, 41], iconAnchor: [12, 41]
+                    })
+                }).addTo(smithsonianLayer).bindPopup(`<b>${v.vName}</b><br>Smithsonian Data`);
             }
         });
     })
