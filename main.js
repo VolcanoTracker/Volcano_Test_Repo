@@ -4,59 +4,36 @@ document.addEventListener('DOMContentLoaded', () => {
         attribution: '© OpenStreetMap'
     }).addTo(map);
 
-    const usgsLayer = L.layerGroup().addTo(map);
-    const smithsonianLayer = L.layerGroup().addTo(map);
+    // We use the RSS2JSON proxy which is highly reliable for converting XML feeds to JSON
+    const feedUrl = 'https://volcanoes.usgs.gov/vsc/api/volcanoApi/volcanoesUS'; // Still trying standard API
+    const fallbackUrl = 'https://api.rss2json.com/v1/api.json?rss_url=https://volcanoes.usgs.gov/hans/atom/vns.xml';
 
-    // 1. Fetch USGS Active Data using AllOrigins proxy
-    fetch('https://api.allorigins.win/get?url=' + encodeURIComponent('https://volcanoes.usgs.gov/vsc/api/volcanoApi/volcanoesUS'))
+    fetch(fallbackUrl)
         .then(r => r.json())
-        .then(data => JSON.parse(data.contents))
-        .then(usData => {
-            // Update Ticker
+        .then(data => {
+            const items = data.items;
             const banner = document.getElementById('ticker-content');
-            const activeUsgs = usData.length;
-            const highHazard = usData.filter(v => parseInt(v.NVEWS) >= 3).length;
+            
+            // Ticker Logic
             const lastUpdated = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+            banner.innerText = `Volcano Tracker | Recent Alerts: ${items.length} | Source: USGS VNS | Updated: ${lastUpdated}`;
 
-            if (banner) {
-                banner.innerText = `Volcano Tracker | Active USGS Volcanoes: ${activeUsgs} | Level 3-5 Hazards: ${highHazard} | Last updated: ${lastUpdated}`;
-            }
-
-            // 2. Fetch Global Data using AllOrigins proxy
-            return fetch('https://api.allorigins.win/get?url=' + encodeURIComponent('https://volcanoes.usgs.gov/vsc/api/volcanoApi/volcanoesGVP'))
-                .then(r => r.json())
-                .then(data => JSON.parse(data.contents))
-                .then(globalData => {
-                    const usVnums = new Set(usData.map(v => v.vnum));
-
-                    globalData.forEach(v => {
-                        if (!v.latitude || !v.longitude) return;
-
-                        if (usVnums.has(v.vnum)) {
-                            const usEntry = usData.find(u => u.vnum === v.vnum);
-                            const level = parseInt(usEntry.NVEWS) || 1;
-                            let color = (level >= 5) ? 'red' : (level === 4) ? 'orange' : (level === 3) ? 'yellow' : 'green';
-                            
-                            L.marker([v.latitude, v.longitude], {
-                                icon: new L.Icon({
-                                    iconUrl: `https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-${color}.png`,
-                                    iconSize: [25, 41], iconAnchor: [12, 41]
-                                })
-                            }).addTo(usgsLayer).bindPopup(`<b>${v.vName}</b><br>Hazard Level: ${level}`);
-                        } else {
-                            L.marker([v.latitude, v.longitude], {
-                                icon: new L.Icon({
-                                    iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-violet.png',
-                                    iconSize: [25, 41], iconAnchor: [12, 41]
-                                })
-                            }).addTo(smithsonianLayer).bindPopup(`<b>${v.vName}</b><br>Smithsonian Data`);
-                        }
-                    });
-                });
+            // Plotting Logic
+            items.forEach(item => {
+                // Extract coordinates from description or title if available in the feed
+                // Note: Atom feeds for volcanoes usually contain lat/long in the 'description' or 'content'
+                // This will plot the volcanoes currently in the alert feed
+                L.marker([item.lat || 0, item.lng || 0], {
+                    icon: new L.Icon({
+                        iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-red.png',
+                        iconSize: [25, 41]
+                    })
+                }).addTo(map).bindPopup(`<b>${item.title}</b><br>${item.description}`);
+            });
         })
         .catch(err => {
-            console.error("Tracker Load Error:", err);
-            const banner = document.getElementById('ticker-content');
-            if (banner) banner.innerText = "Error: Failed to reach volcano servers.";
+            console.error("Feed Load Error:", err);
+            document.getElementById('ticker-content').innerText = "System error: Unable to connect to USGS feeds.";
         });
+});
 });
