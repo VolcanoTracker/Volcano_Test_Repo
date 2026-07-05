@@ -1,16 +1,21 @@
 document.addEventListener('DOMContentLoaded', () => {
-    const map = L.map('map').setView([20, 0], 2);
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '© OpenStreetMap' }).addTo(map);
+    // Setup a display area at the top
+    const debugDiv = document.createElement('div');
+    debugDiv.style.position = 'fixed';
+    debugDiv.style.top = '50px';
+    debugDiv.style.background = 'yellow';
+    debugDiv.style.zIndex = '2000';
+    document.body.appendChild(debugDiv);
 
     fetch('https://corsproxy.io/?url=https://volcanoes.usgs.gov/vsc/api/volcanoApi/volcanoesGVP')
         .then(r => r.json())
         .then(data => {
-            // Pick a known active volcano to inspect its full data
-            const sample = data.find(v => v.vName.includes("Kilauea")) || data[0];
-            console.log("Full Data Object for sample:", sample);
-            
-            // Log every key present in the object
-            console.log("All available keys:", Object.keys(sample));
+            // Get the first item
+            const sample = data[0];
+            // Show all the keys on the screen
+            debugDiv.innerText = "Keys found: " + Object.keys(sample).join(', ');
         })
-        .catch(err => console.error(err));
+        .catch(err => {
+            debugDiv.innerText = "Fetch Error: " + err;
+        });
 });
