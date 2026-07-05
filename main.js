@@ -15,7 +15,20 @@ document.addEventListener('DOMContentLoaded', () => {
     .then(([globalData, usData]) => {
         // 1. Create a Set of all US volcano IDs so we know which ones to "Colorize"
         const usVnums = new Set(usData.map(v => v.vnum));
+// ... inside your Promise.all(...).then(([globalData, usData]) => { ...
 
+// Calculate metrics
+const activeUsgs = usData.length;
+const highHazard = usData.filter(v => parseInt(v.NVEWS) >= 3).length;
+const lastUpdated = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+// Update the banner
+const banner = document.getElementById('ticker-content');
+if (banner) {
+    banner.innerText = `Volcano Tracker | Active USGS Volcanoes: ${activeUsgs} | Level 3-5 Hazards: ${highHazard} | Last updated: ${lastUpdated}`;
+}
+
+// ... rest of your code ...
         globalData.forEach(v => {
             if (!v.latitude || !v.longitude) return;
 
