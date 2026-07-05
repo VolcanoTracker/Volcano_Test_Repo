@@ -4,36 +4,47 @@ document.addEventListener('DOMContentLoaded', () => {
         attribution: '© OpenStreetMap'
     }).addTo(map);
 
-    // Fetch the REAL-TIME activity feed
-    fetch('https://corsproxy.io/?url=https://volcanoes.usgs.gov/vsc/api/volcanoApi/volcanoesUS')
-        .then(r => r.json())
-        .then(data => {
-            let activeVolcanoes = data.filter(v => parseInt(v.NVEWS) > 1);
-            let highHazards = activeVolcanoes.filter(v => parseInt(v.NVEWS) >= 3);
-            
-            // Update Ticker
-            const banner = document.getElementById('ticker-content');
-            if (banner) {
-                banner.innerText = `Active Monitored: ${activeVolcanoes.length} | High Hazard (Lvl 3+): ${highHazards.map(v => v.vName).join(', ')}`;
+    // 1. Define the Triangle Icon using CSS
+    const triangleIcon = L.divIcon({
+        className: 'custom-triangle',
+        html: '<div style="width: 0; height: 0; border-left: 8px solid transparent; border-right: 8px solid transparent; border-bottom: 16px solid blue;"></div>',
+        iconSize: [16, 16],
+        iconAnchor: [8, 16]
+    });
+
+    // 2. Fetch USGS (Live) and Smithsonian (Static)
+    Promise.all([
+        fetch('https://corsproxy.io/?url=https://volcanoes.usgs.gov/vsc/api/volcanoApi/volcanoesUS').then(r => r.json()),
+        fetch('volcanoesGVP.json').then(r => r.json()) // Ensure this file is in your project folder
+    ])
+    .then(([usgsData, gvpData]) => {
+        // Ticker logic (USGS)
+        let active = usgsData.filter(v => parseInt(v.NVEWS) > 1);
+        let high = active.filter(v => parseInt(v.NVEWS) >= 3);
+        const banner = document.getElementById('ticker-content');
+        if (banner) banner.innerText = `Active Monitored: ${active.length} | High Hazard: ${high.map(v => v.vName).join(', ')}`;
+
+        // Plot USGS (Markers)
+        usgsData.forEach(v => {
+            if (v.latitude && v.longitude) {
+                const level = parseInt(v.NVEWS) || 1;
+                let color = (level >= 5) ? 'red' : (level === 4) ? 'orange' : (level === 3) ? 'yellow' : 'green';
+                const icon = new L.Icon({
+                    iconUrl: `https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-${color}.png`,
+                    iconSize: [25, 41], iconAnchor: [12, 41]
+                });
+                L.marker([v.latitude, v.longitude], { icon }).addTo(map).bindPopup(`<b>${v.vName}</b><br>Hazard Level: ${level}`);
             }
+        });
 
-            // Plot Markers
-            data.forEach(v => {
-                if (v.latitude && v.longitude) {
-                    const level = parseInt(v.NVEWS) || 1;
-                    let color = (level >= 5) ? 'red' : (level === 4) ? 'orange' : (level === 3) ? 'yellow' : 'green';
-
-                    const customIcon = new L.Icon({
-                        iconUrl: `https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-${color}.png`,
-                        iconSize: [25, 41], iconAnchor: [12, 41], popupAnchor: [1, -34]
-                    });
-
-                    L.marker([v.latitude, v.longitude], { icon: customIcon })
-                     .addTo(map)
-                     .bindPopup(`<b>${v.vName}</b><br>Hazard Level: ${level}`);
-                }
-            });
-        })
-        .catch(err => console.error("Fetch Error:", err));
-        //t
+        // Plot Smithsonian (Triangles)
+        gvpData.forEach(v => {
+            if (v.latitude && v.longitude) {
+                L.marker([v.latitude, v.longitude], { icon: triangleIcon })
+                 .addTo(map)
+                 .bindPopup(`<b>${v.vName}</b><br>Smithsonian Data`);
+            }
+        });
+    })
+    .catch(err => console.error("Fetch Error:", err));
 });
