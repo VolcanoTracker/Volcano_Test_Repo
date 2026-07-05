@@ -9,11 +9,12 @@
     </style>
 </head>
 <body>
+    <div id="ticker" style="position: absolute; top: 0; width: 100%; z-index: 1000; background: #333; color: white; padding: 10px; overflow: hidden; white-space: nowrap; font-family: sans-serif;">
+    <marquee id="ticker-content">Loading volcano data...</marquee>
+</div>
     <div id="map"></div>
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script src="main.js"></script>
 </body>
-<div id="ticker" style="position: absolute; top: 0; width: 100%; z-index: 1000; background: #333; color: white; padding: 10px; overflow: hidden; white-space: nowrap; font-family: sans-serif;">
-    <marquee id="ticker-content">Loading volcano data...</marquee>
-</div>
+
 </html>
