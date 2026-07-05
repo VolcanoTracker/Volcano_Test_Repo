@@ -7,11 +7,12 @@ document.addEventListener('DOMContentLoaded', () => {
     const usgsLayer = L.layerGroup().addTo(map);
     const smithsonianLayer = L.layerGroup().addTo(map);
 
-    // 1. Fetch USGS Active data first (Critical for Ticker)
-    fetch('https://corsproxy.io/?url=https://volcanoes.usgs.gov/vsc/api/volcanoApi/volcanoesUS')
+    // 1. Fetch USGS Active Data using AllOrigins proxy
+    fetch('https://api.allorigins.win/get?url=' + encodeURIComponent('https://volcanoes.usgs.gov/vsc/api/volcanoApi/volcanoesUS'))
         .then(r => r.json())
+        .then(data => JSON.parse(data.contents))
         .then(usData => {
-            // Update Ticker immediately
+            // Update Ticker
             const banner = document.getElementById('ticker-content');
             const activeUsgs = usData.length;
             const highHazard = usData.filter(v => parseInt(v.NVEWS) >= 3).length;
@@ -21,11 +22,13 @@ document.addEventListener('DOMContentLoaded', () => {
                 banner.innerText = `Volcano Tracker | Active USGS Volcanoes: ${activeUsgs} | Level 3-5 Hazards: ${highHazard} | Last updated: ${lastUpdated}`;
             }
 
-            // 2. Now fetch Global data to populate the map
-            fetch('https://corsproxy.io/?url=https://volcanoes.usgs.gov/vsc/api/volcanoApi/volcanoesGVP')
+            // 2. Fetch Global Data using AllOrigins proxy
+            return fetch('https://api.allorigins.win/get?url=' + encodeURIComponent('https://volcanoes.usgs.gov/vsc/api/volcanoApi/volcanoesGVP'))
                 .then(r => r.json())
+                .then(data => JSON.parse(data.contents))
                 .then(globalData => {
                     const usVnums = new Set(usData.map(v => v.vnum));
+
                     globalData.forEach(v => {
                         if (!v.latitude || !v.longitude) return;
 
@@ -50,7 +53,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         }
                     });
                 });
-        })//2
+        })
         .catch(err => {
             console.error("Tracker Load Error:", err);
             const banner = document.getElementById('ticker-content');
