@@ -50,7 +50,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         }
                     });
                 });
-        })
+        })//2
         .catch(err => {
             console.error("Tracker Load Error:", err);
             const banner = document.getElementById('ticker-content');
